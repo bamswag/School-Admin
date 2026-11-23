@@ -6,8 +6,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import Membership, User
 from apps.organisations.models import Organisation
-from apps.students.models import AuditEvent, EmergencyContact, StudentRecord
-
+from apps.students.models import AuditEvent, StudentRecord
 
 pytestmark = pytest.mark.django_db
 

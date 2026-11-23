@@ -25,7 +25,6 @@ from .services import (
     update_student,
 )
 
-
 WRITE_ROLES = {Membership.Role.INSTITUTION_ADMIN, Membership.Role.ADMIN_STAFF}
 
 
@@ -89,7 +88,12 @@ class StudentRecordViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         contacts = serializer.validated_data.pop("emergency_contacts", [])
         try:
-            student = create_student(request.user, self.get_membership().organisation, serializer.validated_data, contacts)
+            student = create_student(
+                request.user,
+                self.get_membership().organisation,
+                serializer.validated_data,
+                contacts,
+            )
         except DjangoValidationError as error:
             raise exceptions.ValidationError(error.message_dict) from error
         return Response(StudentRecordSerializer(student).data, status=status.HTTP_201_CREATED)

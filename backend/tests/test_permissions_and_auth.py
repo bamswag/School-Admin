@@ -7,7 +7,6 @@ from apps.organisations.models import Organisation
 
 from .test_student_crud import make_client, student_payload
 
-
 pytestmark = pytest.mark.django_db
 
 
