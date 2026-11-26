@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from apps.identity.models import Person
@@ -9,6 +10,15 @@ from .models import AuditEvent, EmergencyContact, StudentRecord
 
 class StudentConflict(Exception):
     pass
+
+
+STALE_VERSION = "The student record was changed by another user. Refresh the record and try again."
+
+
+def _lock_student(student):
+    return get_object_or_404(
+        StudentRecord.objects.select_for_update(), pk=student.pk, organisation_id=student.organisation_id
+    )
 
 
 def _audit(actor, student, event_type, changed_fields):
@@ -38,12 +48,12 @@ def create_student(actor, organisation, validated_data, contacts):
 
 
 @transaction.atomic
-def update_student(actor, student_id, expected_version, validated_data):
-    student = StudentRecord.objects.select_for_update().get(id=student_id)
+def update_student(actor, student, expected_version, validated_data):
+    student = _lock_student(student)
     if student.archived_at:
         raise StudentConflict("Archived student records are read-only.")
     if student.version != expected_version:
-        raise StudentConflict("The student record was changed by another user.")
+        raise StudentConflict(STALE_VERSION)
 
     new_status = validated_data.get("status", student.status)
     if new_status != student.status and student.status != StudentRecord.Status.ACTIVE:
@@ -62,12 +72,12 @@ def update_student(actor, student_id, expected_version, validated_data):
 
 
 @transaction.atomic
-def archive_student(actor, student_id, expected_version):
-    student = StudentRecord.objects.select_for_update().get(id=student_id)
+def archive_student(actor, student, expected_version):
+    student = _lock_student(student)
     if student.archived_at:
         raise StudentConflict("Student record is already archived.")
     if student.version != expected_version:
-        raise StudentConflict("The student record was changed by another user.")
+        raise StudentConflict(STALE_VERSION)
     student.archived_at = timezone.now()
     student.archived_by = actor
     student.updated_by = actor
@@ -79,6 +89,7 @@ def archive_student(actor, student_id, expected_version):
 
 @transaction.atomic
 def create_contact(actor, student, validated_data):
+    student = _lock_student(student)
     if student.archived_at:
         raise StudentConflict("Archived student records are read-only.")
     contact = EmergencyContact.objects.create(student_record=student, **validated_data)
@@ -88,8 +99,10 @@ def create_contact(actor, student, validated_data):
 
 @transaction.atomic
 def update_contact(actor, student, contact, validated_data):
+    student = _lock_student(student)
     if student.archived_at:
         raise StudentConflict("Archived student records are read-only.")
+    contact = get_object_or_404(student.emergency_contacts.all(), pk=contact.pk)
     changed_fields = []
     for field, value in validated_data.items():
         if getattr(contact, field) != value:

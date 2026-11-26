@@ -1,40 +1,46 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
+from django.http import Http404
 from rest_framework import exceptions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from apps.accounts.models import Membership
 from apps.organisations.models import Organisation
 
+from .errors import public_student_error
 from .models import EmergencyContact, StudentRecord
 from .serializers import (
     AuditEventSerializer,
     EmergencyContactSerializer,
+    StudentArchiveSerializer,
     StudentCreateSerializer,
     StudentRecordSerializer,
     StudentUpdateSerializer,
 )
-from .services import (
-    StudentConflict,
-    archive_student,
-    create_contact,
-    create_student,
-    update_contact,
-    update_student,
-)
+from .services import archive_student, create_contact, create_student, update_contact, update_student
 
 WRITE_ROLES = {Membership.Role.INSTITUTION_ADMIN, Membership.Role.ADMIN_STAFF}
+INSTITUTION_ROLES = WRITE_ROLES | {Membership.Role.READ_ONLY}
 
 
-class Conflict(exceptions.APIException):
-    status_code = status.HTTP_409_CONFLICT
-    default_code = "conflict"
+def get_scoped_object(queryset, **filters):
+    try:
+        return get_object_or_404(queryset, **filters)
+    except Http404:
+        raise exceptions.NotFound() from None
 
 
 class StudentRecordViewSet(viewsets.GenericViewSet):
     http_method_names = ["get", "post", "patch", "head", "options"]
+    serializer_class = StudentRecordSerializer
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        self.get_membership()
+
+    def handle_exception(self, exc):
+        return super().handle_exception(public_student_error(exc))
 
     def get_membership(self):
         if not hasattr(self, "_membership"):
@@ -44,6 +50,7 @@ class StudentRecordViewSet(viewsets.GenericViewSet):
                 organisation__organisation_type=Organisation.Type.INSTITUTION,
                 organisation__is_active=True,
                 active=True,
+                role__in=INSTITUTION_ROLES,
             ).select_related("organisation").first()
         if self._membership is None:
             raise exceptions.PermissionDenied("An active institution membership is required.")
@@ -80,73 +87,52 @@ class StudentRecordViewSet(viewsets.GenericViewSet):
         return Response(StudentRecordSerializer(self.get_queryset(), many=True).data)
 
     def retrieve(self, request, pk=None):
-        return Response(StudentRecordSerializer(get_object_or_404(self.get_queryset(), pk=pk)).data)
+        return Response(StudentRecordSerializer(get_scoped_object(self.get_queryset(), pk=pk)).data)
 
     def create(self, request):
         self.require_writer()
         serializer = StudentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         contacts = serializer.validated_data.pop("emergency_contacts", [])
-        try:
-            student = create_student(
-                request.user,
-                self.get_membership().organisation,
-                serializer.validated_data,
-                contacts,
-            )
-        except DjangoValidationError as error:
-            raise exceptions.ValidationError(error.message_dict) from error
+        student = create_student(request.user, self.get_membership().organisation, serializer.validated_data, contacts)
         return Response(StudentRecordSerializer(student).data, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
         self.require_writer()
-        student = get_object_or_404(self.get_queryset(), pk=pk)
+        student = get_scoped_object(self.get_queryset(), pk=pk)
         serializer = StudentUpdateSerializer(student, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         expected_version = serializer.validated_data.pop("version", None)
         if expected_version is None:
             raise exceptions.ValidationError({"version": "This field is required."})
-        try:
-            student = update_student(request.user, student.id, expected_version, serializer.validated_data)
-        except StudentConflict as error:
-            raise Conflict(str(error)) from error
-        except DjangoValidationError as error:
-            raise exceptions.ValidationError(error.message_dict) from error
+        student = update_student(request.user, student, expected_version, serializer.validated_data)
         return Response(StudentRecordSerializer(student).data)
 
     @action(detail=True, methods=["post"])
     def archive(self, request, pk=None):
         self.require_writer()
-        student = get_object_or_404(self.get_queryset(), pk=pk)
-        try:
-            expected_version = int(request.data["version"])
-        except (KeyError, TypeError, ValueError) as error:
-            raise exceptions.ValidationError({"version": "A valid version is required."}) from error
-        try:
-            student = archive_student(request.user, student.id, expected_version)
-        except StudentConflict as error:
-            raise Conflict(str(error)) from error
+        student = get_scoped_object(self.get_queryset(), pk=pk)
+        serializer = StudentArchiveSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        student = archive_student(request.user, student, serializer.validated_data["version"])
         return Response(StudentRecordSerializer(student).data)
 
     @action(detail=True, methods=["get"])
     def history(self, request, pk=None):
-        student = get_object_or_404(self.get_queryset(), pk=pk)
-        return Response(AuditEventSerializer(student.audit_events.select_related("actor"), many=True).data)
+        student = get_scoped_object(self.get_queryset(), pk=pk)
+        events = student.audit_events.filter(organisation_id=student.organisation_id).select_related("actor")
+        return Response(AuditEventSerializer(events, many=True).data)
 
     @action(detail=True, methods=["get", "post"], url_path="emergency-contacts")
     def emergency_contacts(self, request, pk=None):
-        student = get_object_or_404(self.get_queryset(), pk=pk)
-        if request.method == "GET":
+        if request.method == "POST":
+            self.require_writer()
+        student = get_scoped_object(self.get_queryset(), pk=pk)
+        if request.method in {"GET", "HEAD"}:
             return Response(EmergencyContactSerializer(student.emergency_contacts.all(), many=True).data)
-        self.require_writer()
         serializer = EmergencyContactSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        try:
-            contact = create_contact(request.user, student, serializer.validated_data)
-        except StudentConflict as error:
-            raise Conflict(str(error)) from error
-        except DjangoValidationError as error:
-            raise exceptions.ValidationError(error.message_dict) from error
+        contact = create_contact(request.user, student, serializer.validated_data)
         return Response(EmergencyContactSerializer(contact).data, status=status.HTTP_201_CREATED)
 
     @action(
@@ -157,14 +143,9 @@ class StudentRecordViewSet(viewsets.GenericViewSet):
     )
     def emergency_contact_detail(self, request, pk=None, contact_id=None):
         self.require_writer()
-        student = get_object_or_404(self.get_queryset(), pk=pk)
-        contact = get_object_or_404(EmergencyContact, id=contact_id, student_record=student)
+        student = get_scoped_object(self.get_queryset(), pk=pk)
+        contact = get_scoped_object(EmergencyContact.objects.filter(student_record=student), pk=contact_id)
         serializer = EmergencyContactSerializer(contact, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        try:
-            contact = update_contact(request.user, student, contact, serializer.validated_data)
-        except StudentConflict as error:
-            raise Conflict(str(error)) from error
-        except DjangoValidationError as error:
-            raise exceptions.ValidationError(error.message_dict) from error
+        contact = update_contact(request.user, student, contact, serializer.validated_data)
         return Response(EmergencyContactSerializer(contact).data)

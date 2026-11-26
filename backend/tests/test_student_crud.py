@@ -108,10 +108,15 @@ def test_patch_rejects_stale_version_and_immutable_ownership(school_data):
     client.force_authenticate(user)
     client.credentials(HTTP_X_ORGANISATION_CODE=brs.code)
 
-    updated = client.patch(
+    rejected = client.patch(
         f"/api/v1/students/{record.id}/",
         {"legal_first_name": "Updated", "version": 1, "organisation_id": str(sra.id)},
         format="json",
+    )
+    assert rejected.status_code == 400
+    assert "organisation_id" in rejected.json()
+    updated = client.patch(
+        f"/api/v1/students/{record.id}/", {"legal_first_name": "Updated", "version": 1}, format="json"
     )
     stale = client.patch(
         f"/api/v1/students/{record.id}/",
@@ -122,6 +127,7 @@ def test_patch_rejects_stale_version_and_immutable_ownership(school_data):
     assert updated.status_code == 200
     assert updated.json()["version"] == 2
     assert stale.status_code == 409
+    assert "refresh" in stale.json()["detail"].lower()
     record.refresh_from_db()
     assert record.legal_first_name == "Updated"
     assert record.organisation == brs
