@@ -1,6 +1,20 @@
 # Backend API inventory and verification
 
-Task 002.2D, 26 November 2026. This local checkpoint integrates migration repair `2e1ff73` and stabilisation `2c9b56e` with the reviewed 002.2B isolation patch and 002.2C validation and integrity patch. Task 2.2 is verified within this backend scope. The checkpoint excludes the pending 2.3 authentication implementation and its working-tree edits. No GitHub push was made. GitHub CI is unverified and remains evidence for 2.10.
+This record covers the institution API checkpoint `a822b7c` (002.2D) and the demo authentication checkpoint `c78c81a` (002.3). See the [master plan roadmap](../School%20Admin%20Project%20Master%20Plan.md#243-task-002-completion-roadmap) for current task, GitHub, and release status.
+
+## Demo session API
+
+Routes are under `/api/v1/auth/`. The backend uses Django session authentication. A session does not grant institution access on its own. Student requests still require an active institution membership matching `X-Organisation-Code`.
+
+| Method | Path | Behaviour |
+| --- | --- | --- |
+| `GET` | `/session/` | Returns session state and sets the `csrftoken` cookie. Usable before sign-in. |
+| `POST` | `/login/` | Accepts JSON `email` and `password`. On success, starts a session, rotates the CSRF token, and returns session state. |
+| `POST` | `/logout/` | Clears the session and returns anonymous session state. |
+
+Session state contains `authenticated`, `user` (an object with `id` and `email`, or `null`), and `memberships` (empty when anonymous). Each membership includes `role` and an `organisation` with `id`, `code`, `name`, and `type`. The response includes only active memberships in active organisations. BHA oversight memberships are distinct from institution memberships.
+
+Send the current CSRF cookie value in the `X-CSRFToken` header for login, logout, and authenticated writes. Read the new cookie after sign-in. The server expires an idle session after 60 minutes and checks current access on the next request after revocation. Expected login errors include `400` for invalid input, generic `401` for invalid credentials, `403` for CSRF rejection, and `429` for throttling. The five-failure limit per email and per IP in five minutes is process-local and may overshoot under concurrent attempts.
 
 ## Institution API
 
@@ -20,6 +34,14 @@ Invalid writes return `400` with safe validation errors. Role or membership deni
 
 ## Local test evidence
 
+### 002.3 authentication checkpoint `c78c81a`
+
+The Backend & API handoff reports a clean migration apply on disposable PostgreSQL 17.12, **14 focused tests passed**, and **82 full backend tests passed**. Both session tests deferred from 002.2D passed. The lead also ran 14 focused tests on SQLite. Independent Security & Tenant Isolation review cleared the Basic authentication alternative path after it was removed and passed 39 focused authentication and isolation tests on SQLite. Ruff, Django system checks (local and production configuration), migration drift, and Git diff checks passed.
+
+### 002.2D backend checkpoint `a822b7c`
+
+This checkpoint integrates migration repair `2e1ff73` and stabilisation `2c9b56e` with the reviewed 002.2B isolation and 002.2C validation and integrity changes. The snapshot predates the 2.3 authentication commit.
+
 Built an isolated snapshot from `git archive 2c9b56e backend` plus the seven reviewed student code and test files in this checkpoint. The committed authentication tests were left intact. The earlier 81-pass PostgreSQL run included pending 2.3 work and is baseline evidence for that combined working tree.
 
 | Full backend suite | Passed | Failed | Skipped |
@@ -29,7 +51,7 @@ Built an isolated snapshot from `git archive 2c9b56e backend` plus the seven rev
 
 PostgreSQL applied all migrations on a disposable database, including `students.0001` and `students.0002`. Pytest then created a clean test database. Passing cases covered student creation, editing, search, archive, emergency contacts, institution and role isolation, unauthorised-access denial, uniqueness and foreign keys, late-failure rollback, and concurrent stale-write handling. The concurrent test observed the second PostgreSQL session waiting on the first session's row lock and verified one saved version increment and one audit event. SQLite skipped that PostgreSQL-only test.
 
-Both full suites exited 1 for two existing tests. Both names also failed on an untouched SQLite snapshot of `2c9b56e` with the same cause. `GET /api/v1/auth/session/` returned `404`, so the tests raised `KeyError: 'csrftoken'` before login. The session routes belong to pending 2.3. Neither test was changed, skipped or marked expected-failure for this checkpoint.
+Both full suites exited 1 for two existing tests. Both names also failed on an untouched SQLite snapshot of `2c9b56e` with the same cause. `GET /api/v1/auth/session/` returned `404`, so the tests raised `KeyError: 'csrftoken'` before login. The tests were preserved at this checkpoint and passed at the later 2.3 checkpoint.
 
 - `tests/test_permissions_and_auth.py::test_session_login_logout_and_memberships`
 - `tests/test_permissions_and_auth.py::test_login_errors_are_generic_and_throttled`

@@ -2,12 +2,12 @@
 ## Consolidated Product Master Plan and Codex Reference — Decisions Through Section O
 
 **Document ID:** HSRMS-MASTER-001  
-**Version:** 2.0 (post-discovery decisions consolidated)  
+**Version:** 2.1 (Task 002 completion roadmap)\
 **Originally prepared:** 18 November 2026  
-**Updated:** 23 November 2026  
+**Updated:** 28 November 2026\
 **Owner:** Independent software developer / prospective SaaS provider  
-**Status:** USER-CONFIRMED DESIGN BASELINE; TASKS 001 AND 002 REPORTED COMPLETE; TASK 003 ON HOLD; stakeholder and legal approvals pending  
-**Delivery context:** Original one-month fictional-data prototype aspiration; Tasks 001/002 reported complete but not independently audited. Future timelines must be replanned from actual code state.  
+**Status:** USER-CONFIRMED DESIGN BASELINE; TASK 002 IN PROGRESS; TASK 003 ON HOLD; stakeholder and legal approvals pending\
+**Delivery context:** Original one-month fictional-data prototype aspiration. Current Task 002 evidence and sequencing are tracked in §24.3.\
 **Expected users:** BRS, SRA, NHC, The National Stud, and authorised BHA consumers (all prospective, not customers under contract)
 
 > **AUTHORITATIVE RULE FOR CODEX:** This document, alongside `School Admin Project Decisions.md`, is authoritative for the *owner's confirmed intentions*, not for facts or requirements unverified with institutions, the BHA, legal advisers, or technical tests. Labels below have strict meanings. Never convert a proposal or TBD into a confirmed requirement. If a conflict arises, stop on the conflicting feature, record the conflict, and ask the owner. **Do not start Task 003** or implement planning requirements until the owner explicitly authorises it. Do not implement the full project in one unsupervised pass. Follow the phase gates and test criteria.
@@ -17,7 +17,7 @@
 ### 0.1 Authority and status
 
 - **[CONFIRMED BY OWNER]** The owner explicitly chose this product outcome, including subsequent Sections A–O and final follow-ups. This is **not** legal/stakeholder approval.
-- **[REPORTED IMPLEMENTED]** The owner reports Tasks 001/002 complete. This document has **not** inspected the local code, run migrations, or rerun tests. No new feature should be assumed already present or absent.
+- **[REPORTED IMPLEMENTED]** A historical implementation report. Use repository, test and GitHub evidence to determine current status.
 - **[ENGINEERING RECOMMENDATION]** Proposed technical implementation for an approved outcome; Codex may choose an equally safe, tested approach after inspecting the code.
 - **[STAKEHOLDER / LEGAL REQUIRED]** Requires actual institution/BHA approval, contract, data-protection review, or vendor verification before real data.
 - **[DEFERRED]** Intended later capability; inclusion in this plan is not permission to code it now.
@@ -32,8 +32,8 @@
 
 | Item | Known status |
 |---|---|
-| Task 001 | Owner reports completed: Django/DRF tenant-scoped read API, base models, seed, React/Vite scaffold, Docker/CI configuration |
-| Task 002 | Owner reports completed: student-management CRUD phase; exact features require repository audit |
+| Task 001 | Foundation present in baseline `57408d1`: Django/DRF tenant-scoped read API, base models, synthetic seed, React/Vite scaffold, Docker/CI configuration |
+| Task 002 | **In progress.** See §24.3 for current implementation, verification and GitHub evidence. |
 | Task 003 | **NOT AUTHORISED; ON HOLD.** This document update is not a Codex implementation command |
 | Environments | **One development environment** for now, using fictional data only |
 | Real institutional participation | No school/BHA adoption or data-sharing agreement verified |
@@ -626,12 +626,12 @@ Institution manages accuracy, school staff access, sharing parameters and retent
 
 ## 17. Delivery milestones and actual task status
 
-**Original aspirational schedule:** Synthetic-data prototype in approximately one month from 18 November 2026, under £0–£100 initial cash budget. The user has since completed implementation tasks; do not reset or pretend the project has no code.
+**Original aspirational schedule:** Synthetic-data prototype in approximately one month from 18 November 2026, under £0–£100 initial cash budget. Build on the existing implementation and use §24.3 to identify remaining Task 002 work.
 
 | Capability | Owner-reported / intended status | What must be verified before claiming complete |
 |---|---|---|
-| Task 001: base multi-tenant app | **Reported complete** | Read existing user/organisation/membership/person/student models, migrations, tenant list/detail API, seed, CI, frontend and actual test results |
-| Task 002: core student CRUD | **Reported complete** | Inspect all student create/update/contact/status/archive routes, frontend and tests; do not rerun Task 002 as a blank-slate implementation |
+| Task 001: base multi-tenant app | **Foundation present** in `57408d1` | Backend regression evidence is in §24.3. Project-wide CI and release verification remain at 2.10. |
+| Task 002: student records and tenant security | **In progress** | Use the completion gates and evidence in §24.3 |
 | Sections A–C refinements | Confirmed requirements | Check implementation differences in Task 002; some may already exist |
 | Sections D–O architecture | Confirmed product-owner decisions | Distinguish repository changes needed now from future evaluation/production features |
 | Task 003 | **ON HOLD — NOT AUTHORISED** | Only start after owner explicitly asks to implement and code is inspected |
@@ -648,7 +648,7 @@ Do **not** load or process a real student's information solely because a feature
 
 ## 18. Acceptance and security test matrix (future validation, not claimed passed)
 
-Run tests using fictional records only. **Task 001/002 results have not been rerun while updating this document.** A future code review must identify which are already implemented.
+Run tests using fictional records only. This matrix specifies expected behaviour. See §24.3 for actual Task 002 test evidence.
 
 | ID | Scenario | Expected result |
 |---|---|---|
@@ -716,7 +716,7 @@ Run tests using fictional records only. **Task 001/002 results have not been rer
 
 ## 20. Development sequence and change-control posture
 
-The original Week 1–4 roadmap describes the *initial project start* and is no longer a reliable statement of pending work, because the owner reports **Tasks 001 and 002 completed**. The following is the correct planning sequence:
+§24.3 supersedes the original Week 1–4 schedule for Task 002. Use the following principles when taking up work:
 
 1. **Preserve existing implementation.** Read actual backend models/migrations, service code, APIs, frontend components, tests, `README.md`, `AGENTS.md` and the current decision docs. Record supported features as implemented/partial/missing/contradictory.
 2. **Keep planning independent from execution.** The owner has explicitly chosen not to submit Task 003 yet. No schema, route, code or repo edits are authorised by these revised documents.
@@ -784,7 +784,7 @@ The owner answered all independently answerable architecture rounds through Sect
 | Q-12 | Exact role authority for platform admin **editing/deleting** school records, as distinct from confirmed unrestricted record **access** | Product owner, plus live legal requirements | Direct read confirmed; don't silently invent destructive rights |
 | Q-13 | Destructive populated custom-field erasure and conflict with full-value audit/retention | Institution privacy and owner | Require administrator authority and legal compliance; no unsafe silent deletion |
 | Q-14 | BHA identity evidence UI and whether BHA export approval can be self-approved | BHA policy plus owner | Manual evidence/audit and BHA admin approval; never silently assume self-approval policy |
-| Q-15 | Actual Task 001/002 behaviour and current test state | Future read-only code inspection | Mark reported, not verified |
+| Q-15 | Remaining gaps in Task 001/002 behaviour and test evidence | Lead chat and CI & Release Verification | Use §24.3 for verified evidence and identify gaps explicitly |
 
 **Already decided, do not mark TBD again:** BHA identity reviewer actors = **all authorised BHA staff**; school duplicate reviewers = **institution staff**; BHA ≥150 export approval threshold; no BHA archived access; daily backups with 30d retention, 4h target and up to ~24h recovery-point exposure; single dev environment; student delete/restore by admin and administrative staff for 48h; school local IDs/prefixes; API versioning; 60-minute inactivity; same-school staff hidden information policy.
 
@@ -811,16 +811,49 @@ The owner answered all independently answerable architecture rounds through Sect
 
 Inspect `AGENTS.md`, `README.md`, current master/discovery docs, Django apps/models/migrations/service/API permissions, React routes/components, environment config, tests and CI. Produce a per-requirement gap table: implemented / partial / missing / contradicts owner decision / stakeholder-blocked, with exact affected files and regression risk. Separate improvements already delivered by Task 002 from new deltas. Do not rewrite working app scaffolding or wholesale refactor to match illustrative diagrams.
 
-### 24.3 Example phased next-task backlog — planning only
+### 24.3 Task 002 completion roadmap
 
-- **Slice 1:** verify existing code and tenant/role invariants, status, versioned CRUD, ID allocation, audit.
-- **Slice 2:** configurable fields, grandfathered mandatory rules, two contacts, within-school duplicate flag/review, archive and 48-hour deletion controls.
-- **Slice 3:** dashboard, table/cards, advanced filters, quick/full edit, visibility restrictions, in-app notifications.
-- **Slice 4:** safe CSV/XLSX imports, private async export jobs and school access logs.
-- **Slice 5:** SSO planning/invitations and BHA policy baseline, identity review, consolidated view, large export approval, user roles.
-- **Production gate:** legal agreements, BHA grants, owner platform access governance, MFA, security testing, retention/erasure, isolated hosting and tested restore.
+**Roadmap & Decisions** maintains this section and resolves sequencing and scope questions with the owner. Each lead owns end-to-end acceptance and reports evidence back to Roadmap & Decisions. Supporting chats return the named deliverables to the lead. The lead closes the step before handing off to the next one. Record any evidence still owed at 2.10 explicitly. This roadmap alone authorises no code changes, commits, pushes or deployments.
 
-These slices are **not** automatic Task 003 scope. Split and prioritise only after owner approval and repository audit.
+| Step and objective | Lead chat | Supporting chat and handoff | Depends on | Completion criteria |
+|---|---|---|---|---|
+| **2.0 Git & project safety.** Protect existing work and establish version history. | Roadmap & Decisions | — | Existing checkout and owner-approved Git scope | Recoverable baseline commit, identifiable branch and remote, existing work accounted for, and evidence of what reached GitHub. |
+| **2.1 Database migrations.** Resolve Django model/schema drift. | Database & Migrations | CI & Release Verification returns PostgreSQL migration/test evidence at 2.10. | 2.0 | Model/migration parity and a clean migrated test database with student, contact and audit tables. Verify PostgreSQL application and constraints at 2.10. |
+| **2.2 Backend stabilisation.** Fix tests, API defects and lint within existing backend scope. | Backend & API | Security & Tenant Isolation reviews access boundaries. Database & Migrations reviews constraints and transactions. CI & Release Verification records reproducible test evidence. | 2.1 | Complete 002.2A test/lint stabilisation, 002.2B institution isolation, 002.2C validation/error handling/database integrity and 002.2D final backend regression verification. Record the tested checkpoint and any out-of-scope failures. |
+| **2.3 Authentication.** Implement demo login and logout with a 60-minute inactivity timeout. | Backend & API | Security & Tenant Isolation reviews session, CSRF and membership enforcement. Frontend & UX receives the endpoint, cookie and membership contract. | 2.2 | Session/login/logout, active membership filtering, CSRF, generic errors, prototype throttling, and server-side idle expiry pass focused and regression tests. Identify the reviewed commit for 2.4. |
+| **2.4 Frontend foundation.** Build navigation, login UI and institution switcher. | Frontend & UX | Backend & API supplies the verified 2.3 contract. Security & Tenant Isolation checks tenant state clearance and access revocation behaviour. | 2.3 | Keyboard-accessible authenticated navigation, login/logout and authorised school switching. Handle no-institution, expired session and failed sign-in states. Clear prior-school data and warn before discarding edits where applicable. |
+| **2.5 Student listing.** Build table/detail views, search and pagination. | Frontend & UX | Backend & API delivers the tenant-scoped search, detail and pagination contract and regression tests. Security & Tenant Isolation reviews rows, fields and count disclosure. | 2.4 | Accessible table and detail, usable empty/loading/error states, tenant-scoped search, 25 per page by default and 50 maximum. Document compatibility with the existing unpaginated client contract. |
+| **2.6 Student creation.** Deliver forms, validation and institution-specific IDs. | Frontend & UX | Backend & API delivers atomic create and server-side ID allocation. Database & Migrations delivers schema/constraint and concurrent allocation evidence. | 2.5 | Authorised staff can save valid records, see field errors and receive a unique, immutable, non-reused institution-prefixed ID. Preserve existing IDs and verify atomic student/person creation. |
+| **2.7 Student editing.** Deliver explicit save and protection against concurrent updates. | Frontend & UX | Backend & API verifies versioned updates and returns the conflict contract. | 2.6 | Explicit Save Changes, validation and role-aware controls. A stale edit produces a refresh/retry state and preserves the newer server version. Confirm system-owned fields stay immutable. |
+| **2.8 Emergency contacts.** Add, edit and remove contacts, maximum two per student. | Backend & API | Database & Migrations verifies concurrent enforcement and the existing one-primary constraint. Frontend & UX delivers the contact controls. Security & Tenant Isolation reviews nested permissions and archive restrictions. | 2.7; owner decision on removal before removal work | Authorised contact changes are tenant-scoped and audited. Enforce the two-contact cap on nested creation and later additions, including concurrent writes. Keep archived contacts read-only. Verify the owner-approved removal behaviour before closing the step. |
+| **2.9 Status, archive & history.** Complete existing record workflows and enforce audit-history permissions. | Backend & API | Frontend & UX delivers status, archive and history screens. Security & Tenant Isolation verifies backend history access, including read-only denial for full audit and cross-tenant non-disclosure. | 2.8; resolve audit scope before expanding stored history | Verify permitted transitions, versioned archive that preserves status, default archived filtering, and role-gated history. Match approved history fields and scope. Archive restoration and recoverable student deletion remain outside the existing-workflow objective. |
+| **2.10 Final verification.** Run PostgreSQL and security checks and update documentation. | CI & Release Verification | Database & Migrations returns schema/apply and constraints evidence. Security & Tenant Isolation returns tenant, field and privilege sign-off. Backend & API and Frontend & UX return regression evidence and correct setup/API documentation in their areas. Roadmap & Decisions records the final disposition. | 2.0–2.9 closed or explicitly descoped by the owner | Verify migrations and full backend suite on PostgreSQL, Django checks/Ruff, frontend tests/typecheck/build and browser/accessibility checks. Record CI outcome against the reviewed revision and update documentation. Isolation failures block release. |
+
+#### Evidence snapshot — 28 November 2026
+
+GitHub `main` was verified at `a822b7c` before publication of this update. Authentication checkpoint `c78c81a` is an ancestor of this documentation revision. The latest recorded backend run at 2.3 closeout passed **82 tests on PostgreSQL 17.12**. See the [backend API inventory and verification record](docs/backend-api-verification.md) for revision-specific results. GitHub CI and project-wide release verification remain unverified for 2.10.
+
+| Step | Implementation | Test verification | GitHub push status |
+|---|---|---|---|
+| 2.0 | Complete. Baseline `57408d1` and configured `origin`. | Git history and remote baseline verified. Application tests are outside this step. | Baseline on GitHub `main`. |
+| 2.1 | Complete. Migration repair in `2e1ff73` (students `0002`). | Clean PostgreSQL migrations and constraint tests verified during 002.2D. SQLite schema and drift checks passed. | Repair on GitHub `main`. |
+| 2.2 | Complete. 002.2A committed as `2c9b56e`. Reviewed 002.2B and 002.2C integrated and verified at the 002.2D checkpoint `a822b7c`. | PostgreSQL 72 passed, 2 failed. SQLite 71 passed, 2 failed, 1 skipped. Both failures were the pending 2.3 session tests, since passed at 2.3. Isolation, constraints, rollback, row-lock contention, Ruff, Django, drift and dependency checks verified. | Checkpoint on GitHub `main`. GitHub CI unverified. |
+| 2.3 | Complete at `c78c81a`. Demo session login/logout, login CSRF rotation, 60-minute server-side idle expiry, active membership filtering and process-local throttling. API access uses session authentication. | PostgreSQL 14 focused and 82 full-suite tests passed, including the two deferred tests. SQLite 14 focused tests passed. Independent security review cleared the alternative Basic authentication path and passed 39 focused authentication/isolation tests on SQLite. Ruff, Django and drift checks passed. | Authentication checkpoint ships with this documentation revision. GitHub CI unverified. |
+| 2.4 | Pending. React still shows the Task 001 scaffold. | Login, switching and navigation unverified. | Scaffold on GitHub `main`. No 2.4 implementation identified. |
+| 2.5 | Partial. Tenant list/detail/search API exists and returns an unpaginated list. Table/detail UI and pagination pending. | Existing list/detail/search tests passed on SQLite. Pagination and UI unverified. | Existing API on GitHub `main`. Completion changes pending. |
+| 2.6 | Partial. API creates student/person records with a caller-supplied number. Forms and server-issued IDs pending. | Existing create, validation and per-school uniqueness tests passed on SQLite. Allocation and UI unverified. | Existing API on GitHub `main`. Completion changes pending. |
+| 2.7 | Partial. Versioned PATCH and stale-write rejection exist. Explicit-save UI pending. | PATCH and stale-write coverage passed. Real PostgreSQL row-lock contention verified at 2.2 closeout. Explicit-save UI unverified. | Hardened API and regression tests on GitHub `main`. UI pending. |
+| 2.8 | Partial. API supports add/edit and one primary contact. Removal, two-contact cap and UI pending. | Existing contact and isolation tests passed on SQLite. Cap concurrency, removal and UI unverified. | Existing API and constraint on GitHub `main`. Completion changes pending. |
+| 2.9 | Partial. Status changes, archive and changed-field audit exist. History endpoint lacks an explicit writer-role check and full old/new values are absent. UI pending. | Existing status/archive/audit tests passed on SQLite. Correct history-role enforcement and UI unverified. | Existing workflows on GitHub `main`. Completion changes pending. |
+| 2.10 | Pending. CI workflow and Compose configuration exist. Final evidence and docs closeout pending. | Final PostgreSQL, CI, security, browser and accessibility evidence unverified. | CI configuration on GitHub `main`. No verified final release revision. |
+
+#### Next handoff and owner decisions
+
+- **Next lead: Frontend & UX for 002.4 — Frontend foundation.** The local prerequisite is met at `c78c81a`. Use the [verified session contract](docs/backend-api-verification.md#demo-session-api) to build login, authenticated navigation and the institution switcher when authorised. **Backend & API** supplies the contract. **Security & Tenant Isolation** reviews tenant-state clearance and access revocation. Meet the 2.4 completion criteria before starting student listing work.
+- **2.8 removal decision.** The earlier Task 002 implementation brief excluded contact deletion. The new roadmap calls for removal. The owner must confirm whether removal means recoverable removal, permanent deletion subject to retention, or keeping the earlier exclusion. Until then, do not add removal routes or controls. The two-contact cap already has owner approval.
+- **2.9 history decision.** Section B and §8 reserve full edit history for institution admins and administrative staff. The earlier Task 002 brief allowed read-only staff to see the existing changed-field history. Confirm whether read-only staff retain a separate metadata-only view or receive no history. Also confirm whether old/new values land in 2.9 or remain a later deliverable under STU-10. No privilege or personal-data expansion while these decisions are open.
+
+Task 003 and other later features remain on hold. The existing backlog file is historical for Task 002 status. Use this section for handoffs and current evidence.
 
 ### 24.4 Change-control template
 
@@ -878,7 +911,7 @@ Originally checked **18 November 2026** (sources are carried forward, **not reve
 |---|---|
 | Exactly four schools plus separate BHA oversight organisation | CONSISTENT |
 | Only student record management; no training/course/attendance/qualification/student accounts | CONSISTENT |
-| Task 001/002 reported complete; Task 003 deliberately on hold | CONSISTENT; code itself **not yet audited** |
+| Task 002 in progress; Task 003 deliberately on hold | Current implementation, verification and GitHub evidence in §24.3 |
 | One website/DB and one current fictional-data development environment | CONSISTENT |
 | Institutional SSO eventual, demo login now, admin MFA and 1-hour inactivity | CONSISTENT |
 | Platform-admin direct all-school record access | CONSISTENT; legal/live governance **open** |

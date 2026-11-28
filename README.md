@@ -2,15 +2,27 @@
 
 Synthetic-data, non-production prototype for the four prospective education tenants named in [`School Admin Project Master Plan.md`](<School Admin Project Master Plan.md>). BHA is represented separately as an oversight organisation. No institution has approved or adopted this software.
 
-## Task 001 scope
+## What is in the prototype
 
 - Django 5.2/DRF backend with custom users, organisations, memberships, unverified persons, and minimal student records.
-- Authenticated, read-only tenant-scoped student list/detail API.
+- Tenant-scoped student list, search, detail, create, edit, archive, history, and emergency-contact add/edit API. The backend enforces institution roles, validates writes, and rejects stale edits.
+- Demo session login and logout, CSRF protection, active membership checks, and a 60-minute idle timeout.
 - Idempotent synthetic seed command for BRS, SRA, NHC, The National Stud, BHA, demo role accounts, and one fictional student per school.
-- Minimal Vite/React/TypeScript shell.
+- Minimal Vite/React/TypeScript shell. Login UI and institution switching are the next frontend milestone.
 - Local PostgreSQL Compose service and CI checks.
 
-Later-phase workflows are intentionally absent.
+## Project roadmap and chats
+
+The [Task 002 roadmap in the master plan](<School Admin Project Master Plan.md#243-task-002-completion-roadmap>) is the source for task assignments, dependencies and current implementation, test and GitHub status.
+
+- **Roadmap & Decisions** manages scope, sequencing and handoffs.
+- **Backend & API** owns Django, authentication, business rules and API tests.
+- **Frontend & UX** owns React, accessibility and browser tests.
+- **Database & Migrations** owns PostgreSQL schema, migrations and constraints.
+- **Security & Tenant Isolation** reviews tenant, role and field boundaries.
+- **CI & Release Verification** owns CI, Docker and release evidence.
+
+Before starting, read [AGENTS.md](AGENTS.md), the [master plan](<School Admin Project Master Plan.md>) and the [decision register](<School Admin Project Decisions.md>). Use the lead chat and prerequisites named in the roadmap. Task 003 remains on hold.
 
 ## Local setup
 
@@ -34,10 +46,18 @@ Run the backend:
 .venv/bin/python backend/manage.py runserver
 ```
 
-The API requires authentication plus an `X-Organisation-Code` header matching an active institution membership:
+Student routes require a valid session plus an `X-Organisation-Code` header matching an active institution membership. See the [backend API inventory](docs/backend-api-verification.md#institution-api) for routes, roles, and write errors.
 
-- `GET /api/v1/students/`
-- `GET /api/v1/students/{uuid}/`
+The demo session API uses server-side sessions with a 60-minute idle timeout.
+
+- `GET /api/v1/auth/session/` returns session state and sets the `csrftoken` cookie.
+- `POST /api/v1/auth/login/` accepts JSON with `email` and `password`, then returns session state and rotates the CSRF token.
+- `POST /api/v1/auth/logout/` clears the session and returns anonymous session state.
+
+Send the current `csrftoken` cookie value in the `X-CSRFToken` header on login,
+logout, and authenticated writes. Read the fresh cookie after login rotates it.
+The demo limiter tracks failed logins per email and IP in one process. See the
+[session contract and verification evidence](docs/backend-api-verification.md#demo-session-api).
 
 Run the frontend:
 

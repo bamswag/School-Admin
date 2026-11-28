@@ -1,8 +1,5 @@
 # Implementation backlog
 
-- [x] Task 001 foundation: ORG-01, ORG-02, IAM-01, ID-01, STU-02, NFR-01.
-- [ ] Week 2 student CRUD, contacts, status, archive, and audit — not started.
-- [ ] Week 3 registration approval and synthetic BHA proof — not started.
-- [ ] Week 4 optional import, polish, and demo readiness — not started.
+Use the [Task 002 roadmap](../School%20Admin%20Project%20Master%20Plan.md#243-task-002-completion-roadmap) for the active backlog, lead chats, dependencies, and completion evidence. It supersedes the original week-by-week checklist.
 
-See §20 and §24 of `School Admin Project Master Plan.md`; unchecked items are not implied commitments beyond the plan.
+The [backend verification record](backend-api-verification.md) contains the tested API contract and checkpoint results. See [master plan §20](../School%20Admin%20Project%20Master%20Plan.md#20-development-sequence-and-change-control-posture) for later work. Task 003 remains on hold.

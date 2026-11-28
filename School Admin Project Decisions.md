@@ -2,8 +2,8 @@
 ## Authoritative Discovery Answers and Architecture Decisions — Sections 1–6, A–O, and final clarifications
 
 **Document ID:** HSRMS-DISCOVERY-002  
-**Version:** 2.0  
-**Updated:** 23 November 2026  
+**Version:** 2.1\
+**Updated:** 28 November 2026\
 **Status:** Product-owner decisions recorded; stakeholder/legal confirmation still pending  
 **Companion document:** `School Admin Project Master Plan.md`  
 **Implementation instruction:** **Task 003 is ON HOLD. Do not implement it merely because these documents have been updated.**
@@ -15,7 +15,7 @@
 - **STAKEHOLDER / LEGAL APPROVAL REQUIRED** means a product decision cannot itself authorise processing or disclosure of real student data.
 - **DEFERRED** means planned for later and not part of the current task by default.
 - More recent explicit decisions supersede older entries **only where they conflict**. An old historical answer below is retained for traceability and called out where superseded.
-- Codex must inspect the actual repository and existing migrations/tests before determining what is missing. **Task 001 and Task 002 are reported completed by the owner, but were not independently inspected for this document.**
+- Codex must inspect the actual repository and existing migrations/tests before determining what is missing. Earlier completion reports are retained as history. Current Task 002 progress is tracked in the companion master plan, §24.3.
 
 ## Section 1 — Core purpose and system structure (original discovery)
 
@@ -85,7 +85,7 @@
 3. Initial budget **£0–£100**; one-month prototype aspiration, not full production certification.
 4. Launch one school first, then expand to all four, after commercial/legal validation.
 5. Independently owned/maintained commercial SaaS; pricing not yet agreed.
-6. **Implementation state:** Owner reports Task 001 and Task 002 complete. **Task 003 is intentionally on hold**. Codex must not treat an updated planning document as an instruction to implement it.
+6. **Implementation state at original discovery:** The owner reported Task 001 and Task 002 complete. The later roadmap decision below records the revised sequence and points to verified status. **Task 003 is intentionally on hold**.
 7. **Environments:** One development environment for now, containing only fictional data; staging/production separation required before processing real data.
 
 ---
@@ -252,6 +252,37 @@
 10. **Task 003 remains on hold.** These files record decisions but do not authorise coding, migrations, deployment or data ingestion.
 
 ---
+
+## Owner planning decisions — 26 November 2026
+
+The owner established six existing project chats and assigned their responsibilities:
+
+| Chat | Responsibility |
+|---|---|
+| **Roadmap & Decisions** | Scope, sequencing, open decisions, progress tracking and handoffs |
+| **Backend & API** | Django, DRF, authentication, business rules and API tests |
+| **Frontend & UX** | React, navigation, forms, accessibility and browser tests |
+| **Database & Migrations** | PostgreSQL, Django migrations, database constraints and schema verification |
+| **Security & Tenant Isolation** | Review of school boundaries, roles, field access and privilege regressions |
+| **CI & Release Verification** | CI, Docker, PostgreSQL test runs and final release evidence |
+
+The owner fixed the Task 002 order: **2.0** Git & project safety → **2.1** database migrations → **2.2** backend stabilisation → **2.3** authentication → **2.4** frontend foundation → **2.5** student listing → **2.6** student creation → **2.7** student editing → **2.8** emergency contacts → **2.9** status, archive & history → **2.10** final verification. The [master plan, §24.3](<School Admin Project Master Plan.md#243-task-002-completion-roadmap>) holds step objectives, single lead assignments, support deliverables, gates and current evidence. Track implementation, test verification and GitHub push status separately. Keep the earlier subtask identifiers and evidence.
+
+**Owner decisions still needed before changing the affected behaviour:**
+
+- **2.8 contact removal:** The new objective includes removal, whereas the earlier Task 002 brief excluded contact deletion. Confirm recoverable removal, permanent deletion subject to retention, or retention of the previous exclusion. The existing two-contact requirement is confirmed. The 48-hour rule applies to student records and does not establish a contact recovery window.
+- **2.9 history scope:** Section B reserves full edit history to institution administrators and administrative staff. The earlier Task 002 brief allowed read-only staff to see history, and the existing endpoint exposes changed-field names. Confirm whether read-only staff should receive a separate metadata-only view or no history, and whether full old/new values are in scope for 2.9. The full-history restriction remains in force.
+
+The 2.5 pagination objective schedules the already-confirmed 25/50 requirement from Section H. The existing unpaginated API remains the baseline until the 2.5 compatibility approach is implemented and verified. The 2.6 objective schedules the already-confirmed system-generated school IDs from Sections A/C and preserves existing IDs.
+
+The roadmap supersedes the earlier blanket Task 002 completion report as a planning baseline. It does not authorise code changes or alter the confirmed safety rules. Task 003 remains on hold.
+
+### Task 002.2 closeout scope
+
+- **002.2C — API Validation, Error Handling & Database Integrity.** The owner supplied the scope: validate requests and write fields, return safe API errors, protect database integrity and atomic saves, and verify concurrent-edit behaviour. An outdated edit returns `409 Conflict` with refresh guidance and preserves the successful save.
+- **002.2D — Final Backend Regression Testing & Verification.** The owner added a final verification gate for 002.1–002.2C covering the full backend suite, PostgreSQL, isolation, API regressions, database integrity, code and dependency checks, documentation, and a local Git checkpoint. The scope was verification and closeout of existing backend functionality.
+
+The [master plan roadmap](School%20Admin%20Project%20Master%20Plan.md#243-task-002-completion-roadmap) records the resulting checkpoints and their status.
 
 ## Fixed boundaries (unchanged)
 
