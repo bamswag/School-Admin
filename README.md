@@ -8,7 +8,7 @@ Synthetic-data, non-production prototype for the four prospective education tena
 - Tenant-scoped student list, search, detail, create, edit, archive, history, and emergency-contact add/edit API. The backend enforces institution roles, validates writes, and rejects stale edits.
 - Demo session login and logout, CSRF protection, active membership checks, and a 60-minute idle timeout.
 - Idempotent synthetic seed command for BRS, SRA, NHC, The National Stud, BHA, demo role accounts, and one fictional student per school.
-- Minimal Vite/React/TypeScript shell. Login UI and institution switching are the next frontend milestone.
+- React demo sign-in, protected dashboard shell, institution switching, and sign-out.
 - Local PostgreSQL Compose service and CI checks.
 
 ## Project roadmap and chats
@@ -66,6 +66,13 @@ cd frontend
 npm ci
 npm run dev
 ```
+
+Open the URL printed by Vite. Its development proxy forwards `/api/v1/` to
+Django at `127.0.0.1:8000` so session and CSRF cookies stay same-origin.
+`/login` is the demo sign-in page and `/app/dashboard` is the protected
+institution shell. Choose an active institution from the switcher. Reloading
+restores the server session and selects the first authorised institution.
+Use only the synthetic accounts from `seed_demo` and the password you set locally.
 
 ## Checks
 

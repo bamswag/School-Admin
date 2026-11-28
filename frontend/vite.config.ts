@@ -3,6 +3,12 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      // Django compares the browser's Origin with the request Host on unsafe methods.
+      "/api/v1": { target: "http://127.0.0.1:8000", changeOrigin: false },
+    },
+  },
   test: {
     environment: "jsdom",
   },
